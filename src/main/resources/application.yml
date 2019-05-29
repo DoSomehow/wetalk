@@ -1,0 +1,4 @@
+socket:
+    center:
+        port: 10086
+        maxAlive: 10

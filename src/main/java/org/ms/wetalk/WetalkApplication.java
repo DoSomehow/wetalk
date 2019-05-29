@@ -3,11 +3,12 @@ package org.ms.wetalk;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
-// @RestController
-// @RequestMapping("/app")
+@RestController
 @ServletComponentScan
+// @RequestMapping("/app")
 public class WetalkApplication {
 
 	public static void main(String[] args) {
@@ -28,10 +29,10 @@ public class WetalkApplication {
 	// }
     //
     //
-	// @RequestMapping("/hello")
-	// public String hello() {
-	// 	return "hello world";
-	// }
+    // @RequestMapping("/hello")
+    // public String hello() {
+		// return "hello world";
+    // }
     //
 	// @RequestMapping("/list")
 	// public List<String> list() {
