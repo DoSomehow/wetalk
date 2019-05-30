@@ -14,7 +14,7 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class LoginAction {
 
-    @RequestMapping(value = "/welcome", method = RequestMethod.GET)
+    @RequestMapping(value = {"/", "/welcome"}, method = RequestMethod.GET)
     public String welcomePage() {
         //使用thyemleaf组件之后，动态跳转会覆盖默认的静态跳转，所以如果还想访问static下的静态文件，可以使用重定向
         return "redirect:welcome.html";
