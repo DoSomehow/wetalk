@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>We Talk</title>
+    <link th:href="@{/css/main.css}" rel="stylesheet" />
+    <!-- <link href="../static/css/main.css" rel="stylesheet" /> -->
+</head>
+<body>
+    <h3>Welcome to Login!</h3>
+
+    <form name="fm" action="/login" method="post">
+        <label>用户名：</label><input type="text" name="username" /><br/>
+        <label>密  码：</label><input type="password" name="password" /><br/>
+        <input type="button" name="loginBtn" value="登录" onclick="login()">
+    </form>
+
+</body>
+</html>
+<script type="text/javascript">
+
+function login() {
+    var form = document.getElementsByName("fm")[0];
+    form.submit();
+}
+
+</script>

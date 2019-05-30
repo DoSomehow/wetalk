@@ -28,7 +28,7 @@ public class SocketClientReceiveHandler implements Runnable {
                 in = centerSocket.getInputStream();
                 ObjectInputStream ois = new ObjectInputStream(in);
                 Message msg = (Message) ois.readObject();
-                System.out.println("返回数据：" + msg.getMsg());
+                System.out.println("[client]" + msg.getSessionUser() + "对" + msg.getTargetUser() + "说：" + msg.getMsg());
             }
         } catch (IOException e) {
             e.printStackTrace();

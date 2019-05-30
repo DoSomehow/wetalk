@@ -15,7 +15,7 @@ public class SocketServer implements Runnable {
     private int maxAlive;
 
     private ServerSocket serverSocket = null;
-    private Map<Integer, Socket> sessionMap;
+    private Map<String, Socket> sessionMap;
 
     public SocketServer(int centerPort, int maxAlive) {
         this.centerPort = centerPort;
@@ -33,7 +33,7 @@ public class SocketServer implements Runnable {
                 socket = serverSocket.accept();
                 if (socket != null) {
                     System.out.println("[center]客户端" + count + "连接成功!");
-                    sessionMap.put(count, socket);
+                    // sessionMap.put(count, socket);
                     ExecutorService executorService = Executors.newFixedThreadPool(maxAlive);
                     executorService.execute(new SocketServerHandler(socket, sessionMap));
                     count++;
