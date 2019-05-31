@@ -4,206 +4,145 @@
     <meta charset="UTF-8" />
     <title>We Talk</title>
     <link th:href="@{/css/main.css}" rel="stylesheet" />
-    <!-- <link href="../static/css/main.css" rel="stylesheet" /> -->
+    <!-- 注意script不是自闭合标签，所以这里一定要有闭合标签，不要直接在最后用'/>' -->
+    <script type="text/javascript" th:src="@{/plugins/jquery/jquery-3.4.1.min.js}" ></script>
+
     <style type="text/css">
-        input#chat {
-            width: 410px
+        .area-border{
+            border: solid 1px green;
         }
-
-        #console-container {
-            width: 400px;
+        .left{
+            float: left;
         }
-
-        #console {
-            border: 1px solid #CCCCCC;
-            border-right-color: #999999;
-            border-bottom-color: #999999;
-            height: 170px;
-            overflow-y: scroll;
-            padding: 5px;
+        .right{
+            float: right;
+        }
+        .tool-bar{
+            height: 30px;
             width: 100%;
         }
-
-        #console p {
-            padding: 0;
-            margin: 0;
+        .msg-pool{
+            height: 400px;
+            width: 100%;
+            overflow-y: scroll;
+        }
+        .msg-input{
+            height: 150px;
+            width: 100%;
+            overflow-y: scroll;
         }
     </style>
-    <script type="application/javascript">
-        "use strict";
-
-        var Chat = {};
-
-        Chat.socket = null;
-
-        Chat.connect = (function(host) {
-            if ('WebSocket' in window) {
-                Chat.socket = new WebSocket(host);
-            } else if ('MozWebSocket' in window) {
-                Chat.socket = new MozWebSocket(host);
-            } else {
-                Console.log('Error: 浏览器不支持WebSocket');
-                return;
-            }
-
-            Chat.socket.onopen = function () {
-                Console.log('Info: WebSocket链接已打开');
-                document.getElementById('chat').onkeydown = function(event) {
-                    if (event.keyCode == 13) {
-                        Chat.sendMessage();
-                    }
-                };
-            };
-
-            Chat.socket.onclose = function () {
-                document.getElementById('chat').onkeydown = null;
-                Console.log('Info: webcocket关闭.');
-            };
-
-            Chat.socket.onmessage = function (message) {
-                Console.log(message.data);
-            };
-        });
-
-        Chat.initialize = function() {
-            if (window.location.protocol == 'http:') {
-                Chat.connect('ws://' + window.location.host + '/gtweb/chat');
-            } else {
-                Chat.connect('wss://' + window.location.host + '/gtweb/chat');
-            }
-        };
-
-        Chat.sendMessage = (function() {
-            var message = document.getElementById('chat').value;
-            if (message != '') {
-                Chat.socket.send(message);
-                document.getElementById('chat').value = '';
-            }
-        });
-
-        var Console = {};
-
-        Console.log = (function(message) {
-            var console = document.getElementById('console');
-            var p = document.createElement('p');
-            p.style.wordWrap = 'break-word';
-            p.innerHTML = message;
-            console.appendChild(p);
-            while (console.childNodes.length > 25) {
-                console.removeChild(console.firstChild);
-            }
-            console.scrollTop = console.scrollHeight;
-        });
-
-        Chat.initialize();
-
-        document.addEventListener("DOMContentLoaded", function() {
-            // Remove elements with "noscript" class - <noscript> is not allowed in XHTML
-            var noscripts = document.getElementsByClassName("noscript");
-            for (var i = 0; i < noscripts.length; i++) {
-                noscripts[i].parentNode.removeChild(noscripts[i]);
-            }
-        }, false);
-
-    </script>
 </head>
 <body>
-<div class="noscript"><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websockets rely on Javascript being enabled. Please enable
-    Javascript and reload this page!</h2></div>
-<div>
-    <p>
-        <input type="text" placeholder="输入文字，回车发送" id="chat" /><br>
-        注意：输入  消息to用户名   发送给指定用户   比如：  你好to用户1<br>
-        输入   消息     直接发送给全体用户
-    </p>
-    <div id="console-container">
-        <div id="console"/>
+    <div class="area-border tool-bar">
+        <input type="button" name="logoutBtn" th:value="注销" class="right" onclick="logout()" />
     </div>
-</div>
+
+    <div class="area-border">
+        <div id="msgPool" class="msg-pool"></div>
+    </div>
+
+    <div class="area-border">
+        <textarea id="msgContainer" class="msg-input"></textarea>
+        <input type="button" name="sendBtn" th:value="发送" onclick="sendMsg()" />
+    </div>
+
 </body>
 </html>
 <script type="text/javascript">
-    
-function send() {
-    var targetSelector = document.getElementById("targetSelector");
-    var index = targetSelector.selectedIndex;
-    var targetUser = targetSelector.options[index].value;
-    if(!targetUser) {
-        alert("请选择聊天对象！");
-        return;
-    }
+    //全局变量
+    var webSocket = null;
+    var msgPool = $("#msgPool");
+    var msgContainer = $("#msgContainer");
 
+    $(document).ready(function () {
+        //建立WebSocket连接
+        initWebSocket();
 
-    var msgContainer = document.getElementById("msgContainer");
-    var msg = msgContainer.value;
-    if(!msg) {
-        alert("请输入要发送的信息！");
-        return;
-    }
+    });
 
-    //ajax请求
-    var username = document.getElementsByName("username")[0].value;
-    var data = "sessionUser=" + username + "&targetUser=" + targetUser + "&msg=" + msg;
-    ajax_method("/sendMsg", data, 'get');
+    //建立WebSocket连接
+    function initWebSocket() {
+        var serverHost = "ws://localhost:8080/wetalk/server";
 
-    //清空
-    msgContainer.value = "";
-
-}
-
-function ajax_method(url,data,method,success) {
-    // 异步对象
-    var ajax = new XMLHttpRequest();
-
-    // get 跟post  需要分别写不同的代码
-    if (method=='get') {
-        // get请求
-        if (data) {
-            // 如果有值
-            url+='?';
-            url+=data;
-        }else{
-
+        if ('WebSocket' in window) {
+            webSocket = new WebSocket(serverHost);
+        } else if ('MozWebSocket' in window) {
+            webSocket = new MozWebSocket(serverHost);
+        } else {
+            alter('Error: 浏览器不支持WebSocket');
+            return;
         }
-        // 设置 方法 以及 url
-        ajax.open(method,url);
 
-        // send即可
-        ajax.send();
-    }else{
-        // post请求
-        // post请求 url 是不需要改变
-        ajax.open(method,url);
+        //连接成功后的回调函数
+        webSocket.onopen = function() {
+            alert("客户端连接服务器成功！");
+        };
 
-        // 需要设置请求报文
-        ajax.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+        //当从服务器接受到信息时的回调函数
+        webSocket.onmessage = function (event) {
+            //alert("接收服务器信息成功！");
+            var acceptMsg = event.data;
+            var msgUnit = $("<div>接收消息：" + acceptMsg + "</div>");
+            msgPool.append(msgUnit);
+        };
 
-        // 判断data send发送数据
-        if (data) {
-            // 如果有值 从send发送
-            ajax.send(data);
-        }else{
-            // 木有值 直接发送即可
-            ajax.send();
+        //连接失败后的回调函数
+        webSocket.onerror = function () {
+            alert("连接失败！");
+        };
+
+        //连接关闭后的回调函数
+        webSocket.onclose = function () {
+            alert("连接关闭！");
+        };
+
+        //监听窗口关闭事件，当窗口关闭时，主动去关闭websocket连接，防止连接还没断开就关闭窗口，server端会抛异常。
+        window.onbeforeunload = function (ev) {
+            closeWebSocket();
+        }
+
+    }
+
+    //关闭WebSocket连接
+    function closeWebSocket() {
+        if(webSocket != null){
+            webSocket.close();
         }
     }
 
-    // 注册事件
-    ajax.onreadystatechange = function () {
-        // 在事件中 获取数据 并修改界面显示
-        if (ajax.readyState==4&&ajax.status==200) {
-            // console.log(ajax.responseText);
-
-            // 将 数据 让 外面可以使用
-            // return ajax.responseText;
-
-            // 当 onreadystatechange 调用时 说明 数据回来了
-            // ajax.responseText;
-
-            // 如果说 外面可以传入一个 function 作为参数 success
-            success(ajax.responseText);
+    //发送信息
+    function sendMsg() {
+        //获取并校验信息
+        var msg = msgContainer.val();
+        if(!msg){
+            alert("发送信息不能为空！");
+            return;
         }
+
+        if(webSocket == null){
+            alert("未与服务器建立连接！");
+            return;
+        }
+        if(webSocket.readyState != WebSocket.OPEN){
+            alert("与服务器连接已断开！");
+            return;
+        }
+
+        //发送信息
+        webSocket.send(msg);
+
+        //清空
+        msgContainer.val("");
+
+        //放入消息框
+        var msgUnit = $("<div>发送消息：" + msg + "</div>")
+        msgPool.append(msgUnit);
     }
 
-}
+    //注销
+    function logout() {
+        closeWebSocket();
+    }
+
 </script>

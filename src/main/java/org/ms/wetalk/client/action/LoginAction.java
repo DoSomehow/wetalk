@@ -54,5 +54,10 @@ public class LoginAction {
         return "success";
     }
 
+    @RequestMapping(value = "/chatPage", method = RequestMethod.GET)
+    public String chatPage() {
+        return "chat";
+    }
+
 
 }

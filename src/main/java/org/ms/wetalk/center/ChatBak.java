@@ -1,7 +1,6 @@
 package org.ms.wetalk.center;
 
 import javax.websocket.*;
-import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -12,20 +11,20 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Description
  * @Date Created in 2019/5/31 0:38
  */
-@ServerEndpoint("/chat")
-public class Chat {
+//@ServerEndpoint("/chat")
+public class ChatBak {
     private static final String GUEST_PREFIX = "用户";
     /**
      * 一个提供原子操作的Integer的类。在Java语言中，++i和i++操作并不是线程安全的，
      * 在使用的时候，不可避免的会用到synchronized关键字。 而AtomicInteger则通过一种线程安全的加减操作接口。
      */
     private static final AtomicInteger connectionIds = new AtomicInteger(0);
-    private static final Set<Chat> connections = new CopyOnWriteArraySet<>();
+    private static final Set<ChatBak> connections = new CopyOnWriteArraySet<>();
 
     private final String nickname;
     private Session session;
 
-    public Chat() {
+    public ChatBak() {
         nickname = GUEST_PREFIX + connectionIds.getAndIncrement();
     }
 
@@ -93,7 +92,7 @@ public class Chat {
      * @param msg
      */
     private static void broadcast(String msg) {
-        for (Chat client : connections) {
+        for (ChatBak client : connections) {
             try {
                 synchronized (client) {
                     client.session.getBasicRemote().sendText(msg);
@@ -118,7 +117,7 @@ public class Chat {
      */
     private static void broadcastOneToOne(String msg, String nickName) {
         String[] arr = msg.split("to");
-        for (Chat client : connections) {
+        for (ChatBak client : connections) {
             try {
                 if(arr[1].equals(client.nickname) || nickName.equals(client.nickname)){
                     synchronized (client) {
@@ -141,7 +140,7 @@ public class Chat {
     //系统问候语
     private static void SendHello(String nickName) throws IOException{
         String m = String.format("* %s %s", nickName, "你好");
-        for (Chat client : connections) {
+        for (ChatBak client : connections) {
             if(client.nickname.equals(nickName)){
                 client.session.getBasicRemote().sendText(m);
             }
@@ -150,7 +149,7 @@ public class Chat {
     //在线用户
     private static void onlineList() throws IOException {
         String online = "";
-        for (Chat client : connections) {
+        for (ChatBak client : connections) {
             if (online.equals("")) {
                 online = client.nickname;
             } else {
@@ -158,7 +157,7 @@ public class Chat {
             }
         }
         String m = String.format("* %s %s", "当前在线用户", online);
-        for (Chat client : connections) {
+        for (ChatBak client : connections) {
             client.session.getBasicRemote().sendText(m);
         }
 
