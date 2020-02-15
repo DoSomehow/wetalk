@@ -1,4 +1,4 @@
-package org.ms.wetalk.client.bo;
+package org.ms.wetalk.user.bo;
 
 import java.io.Serializable;
 

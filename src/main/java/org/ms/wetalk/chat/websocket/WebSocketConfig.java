@@ -1,4 +1,4 @@
-package org.ms.wetalk.center;
+package org.ms.wetalk.chat.websocket;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

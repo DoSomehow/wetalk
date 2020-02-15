@@ -1,6 +1,6 @@
-package org.ms.wetalk.center;
+package org.ms.wetalk.chat.socket;
 
-import org.ms.wetalk.client.bo.Message;
+import org.ms.wetalk.user.bo.Message;
 
 import java.io.IOException;
 import java.io.InputStream;

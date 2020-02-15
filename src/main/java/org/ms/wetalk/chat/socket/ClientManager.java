@@ -1,7 +1,7 @@
-package org.ms.wetalk.center;
+package org.ms.wetalk.chat.socket;
 
-import org.ms.wetalk.client.bo.Message;
-import org.ms.wetalk.client.bo.User;
+import org.ms.wetalk.user.bo.Message;
+import org.ms.wetalk.user.bo.User;
 
 import java.util.HashMap;
 import java.util.LinkedList;

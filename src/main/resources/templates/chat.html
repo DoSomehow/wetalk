@@ -34,9 +34,17 @@
     </style>
 </head>
 <body>
+    <input type="hidden" name="username" th:value="${username}" />
+    <span th:text="'登录人: ' + ${username}"></span><br/>
+
     <div class="area-border tool-bar">
         <input type="button" name="logoutBtn" th:value="注销" class="right" onclick="logout()" />
     </div>
+
+    <select id="targetSelector">
+        <option>请选择</option>
+        <option th:each="user,userStat : ${userList}" th:text="${user}" th:value="${user}"></option>
+    </select>
 
     <div class="area-border">
         <div id="msgPool" class="msg-pool"></div>
@@ -58,25 +66,28 @@
     $(document).ready(function () {
         //建立WebSocket连接
         initWebSocket();
-
     });
 
     //建立WebSocket连接
     function initWebSocket() {
-        var serverHost = "ws://localhost:8080/wetalk/server";
+        // var serverHost = "ws://localhost:8080/wetalk/server";
+        let serverHost = "ws://192.168.50.76:8080/wetalk/server";
+
+        let username = document.getElementsByName("username")[0].value;
+        serverHost += "/" + username;  //通过url占位形式传参
 
         if ('WebSocket' in window) {
             webSocket = new WebSocket(serverHost);
         } else if ('MozWebSocket' in window) {
             webSocket = new MozWebSocket(serverHost);
         } else {
-            alter('Error: 浏览器不支持WebSocket');
+            showAlertMsg('Error: 浏览器不支持WebSocket');
             return;
         }
 
         //连接成功后的回调函数
         webSocket.onopen = function() {
-            alert("客户端连接服务器成功！");
+            showAlertMsg("客户端连接服务器成功！");
         };
 
         //当从服务器接受到信息时的回调函数
@@ -89,12 +100,12 @@
 
         //连接失败后的回调函数
         webSocket.onerror = function () {
-            alert("连接失败！");
+            showAlertMsg("连接失败！");
         };
 
         //连接关闭后的回调函数
         webSocket.onclose = function () {
-            alert("连接关闭！");
+            showAlertMsg("连接关闭！");
         };
 
         //监听窗口关闭事件，当窗口关闭时，主动去关闭websocket连接，防止连接还没断开就关闭窗口，server端会抛异常。
@@ -113,6 +124,15 @@
 
     //发送信息
     function sendMsg() {
+        //选择聊天对象
+        let targetSelector = document.getElementById("targetSelector");
+        let index = targetSelector.selectedIndex;
+        let targetUser = targetSelector.options[index].value;
+        if(!targetUser) {
+            alert("请选择聊天对象！");
+            return;
+        }
+
         //获取并校验信息
         var msg = msgContainer.val();
         if(!msg){
@@ -130,13 +150,22 @@
         }
 
         //发送信息
-        webSocket.send(msg);
+        let username = document.getElementsByName("username")[0].value;
+        // let data = "user=" + username + "&targetUser=" + targetUser + "&msg=" + msg;
+        let data = {username: username, targetUser: targetUser, msg: msg};
+        webSocket.send(JSON.stringify(data));
 
         //清空
         msgContainer.val("");
 
         //放入消息框
-        var msgUnit = $("<div>发送消息：" + msg + "</div>")
+        let msgUnit = $("<div>发送消息：" + msg + "</div>")
+        msgPool.append(msgUnit);
+    }
+
+    //提示信息
+    function showAlertMsg(msg) {
+        let msgUnit = $("<div>[系统信息]：" + msg + "</div>")
         msgPool.append(msgUnit);
     }
 

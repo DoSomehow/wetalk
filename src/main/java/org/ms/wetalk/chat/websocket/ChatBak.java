@@ -1,4 +1,4 @@
-package org.ms.wetalk.center;
+package org.ms.wetalk.chat.websocket;
 
 import javax.websocket.*;
 import java.io.IOException;

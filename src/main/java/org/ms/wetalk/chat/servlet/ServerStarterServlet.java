@@ -1,6 +1,6 @@
-package org.ms.wetalk.center.servlet;
+package org.ms.wetalk.chat.servlet;
 
-import org.ms.wetalk.center.SocketServer;
+import org.ms.wetalk.chat.socket.SocketServer;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.servlet.ServletException;
@@ -14,7 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 //怎么可以去掉这个urlPatterns，或者是怎么处理。现在如果去掉的话，会导致其他controller都没法接收到请求了。
-@WebServlet(name = "serverStarterServlet", urlPatterns = "/servlet/serverStarter", loadOnStartup = 1)
+//@WebServlet(name = "serverStarterServlet", urlPatterns = "/servlet/serverStarter", loadOnStartup = 1)  //由于使用websocket，所以注掉了这种形式的
 public class ServerStarterServlet extends HttpServlet {
 
     @Value("${socket.center.port}")

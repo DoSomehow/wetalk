@@ -12,15 +12,16 @@
     <form name="fm" action="/login" method="post">
         <label>用户名：</label><input type="text" name="username" /><br/>
         <label>密  码：</label><input type="password" name="password" /><br/>
-        <input type="button" name="loginBtn" value="登录" onclick="login()">
+        <input type="button" name="loginBtn" th:value="登录" onclick="login()">
     </form>
+    <span th:text="${param.errorInfo}" style="color:red;"></span>
 
 </body>
 </html>
 <script type="text/javascript">
 
 function login() {
-    var form = document.getElementsByName("fm")[0];
+    let form = document.getElementsByName("fm")[0];
     form.submit();
 }
 

@@ -1,19 +1,24 @@
-package org.ms.wetalk.center;
+package org.ms.wetalk.chat.websocket;
 
+import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.websocket.*;
+import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
   * @ServerEndpoint 注解是一个类层次的注解，它的功能主要是将目前的类定义成一个websocket服务器端,
   * 注解的值将被用于监听用户连接的终端访问URL地址,客户端可以通过这个URL来连接到WebSocket服务器端
   */
-@ServerEndpoint(value = "/wetalk/server")
+@ServerEndpoint(value = "/wetalk/server/{param}")
 @Component
 public class WebSocketServer {
 
@@ -21,17 +26,23 @@ public class WebSocketServer {
 
     private static int onlineCount = 0;  //在线人数
     //concurrent包的线程安全Set，用来存放每个客户端对应的MyWebSocket对象。若要实现服务端与单一客户端通信的话，可以使用Map来存放，其中Key可以为用户标识
-    private static CopyOnWriteArraySet<WebSocketServer> webSocketSet = new CopyOnWriteArraySet<>();
+//    private static CopyOnWriteArraySet<WebSocketServer> webSocketSet = new CopyOnWriteArraySet<>();
     private Session session;  //与某个客户端的连接会话，需要通过它来给客户端发送数据
+    //使用map对象，便于根据userId来获取对应的WebSocket
+    private static ConcurrentHashMap<String, WebSocketServer> websocketMap = new ConcurrentHashMap<>();
+    private String username;
 
     /**
       * 连接建立成功调用的方法
       * @param session  可选的参数。session为与某个客户端的连接会话，需要通过它来给客户端发送数据
       */
     @OnOpen
-    public void onOpen(Session session) {
+    public void onOpen(Session session, @PathParam("param") String username) {
+        System.out.println("用户"+username+"登录");
         this.session = session;
-        webSocketSet.add(this);
+//        webSocketSet.add(this);
+        this.username = username;
+        websocketMap.put(username, this);
         addOnlineCount();
         log.info("有新连接加入！当前在线人数为" + getOnlineCount());
     }
@@ -41,9 +52,12 @@ public class WebSocketServer {
      */
     @OnClose
     public void onClose() {
-        webSocketSet.remove(this);
-        subOnlineCount();
-        log.info("有一连接关闭！当前在线人数为" + getOnlineCount());
+//        webSocketSet.remove(this);
+        if (websocketMap.get(this.username) != null) {
+            websocketMap.remove(this.username);
+            subOnlineCount();
+            log.info("有一连接关闭！当前在线人数为" + getOnlineCount());
+        }
     }
 
     /**
@@ -54,14 +68,30 @@ public class WebSocketServer {
     @OnMessage
     public void onMessage(String message, Session session) {
         log.info("来自客户端的消息:" + message);
-        for (WebSocketServer ws : webSocketSet) {
-            try {
-                ws.sendMessage(message);
-            } catch (IOException e) {
-                e.printStackTrace();
-                continue;
+        try{
+            JSONObject data = JSONObject.fromObject(message);
+            String username = data.getString("username");
+            String targetUser = data.getString("targetUser");
+            String msg = data.getString("msg");
+            if (StringUtils.isNotBlank(targetUser) && StringUtils.isNotBlank(msg)) {
+                WebSocketServer wss = websocketMap.get(targetUser);
+                if (wss != null) {
+                    wss.sendMessage(msg);
+                }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
+
+//        for (WebSocketServer ws : webSocketSet) {
+//            try {
+//                ws.sendMessage(message);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                continue;
+//            }
+//        }
     }
 
     /**

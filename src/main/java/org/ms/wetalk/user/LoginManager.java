@@ -1,6 +1,6 @@
-package org.ms.wetalk.center;
+package org.ms.wetalk.user;
 
-import org.ms.wetalk.client.bo.User;
+import org.ms.wetalk.user.bo.User;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -25,6 +25,8 @@ public class LoginManager {
         if("wangsy".equals(username) && "wangsy".equals(password)){
             flag = true;
         }else if("tom".equals(username) && "tom".equals(password)){
+            flag = true;
+        }else if("admin".equals(username) && "admin".equals(password)){
             flag = true;
         }
         return flag;

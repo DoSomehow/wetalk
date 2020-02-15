@@ -9,4 +9,4 @@ spring:
     suffix: .html
     mode: HTML
     encoding: utf-8
-    cache: true
+    cache: false
